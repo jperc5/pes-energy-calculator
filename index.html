@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PES Energy Calculator</title>
+  <style>
+    body { font-family: -apple-system, system-ui, Segoe UI, Roboto, Arial, sans-serif; margin: 0; padding: 24px; max-width: 760px; }
+    .muted { color:#555; }
+    .card { border: 1px solid #ddd; border-radius: 16px; padding: 18px; margin-top: 14px; }
+    label { display:block; margin: 12px 0 6px; font-weight: 600; }
+    input, select { width: 100%; padding: 10px; font-size: 16px; border-radius: 12px; border: 1px solid #ccc; }
+    .row {
+        display: flex;
+        gap: 16px;          /* more breathing room */
+        align-items: center;
+}
+
+    .row .value {
+        flex: 2;            /* number input = wider */
+}
+
+    .row .unit {
+        flex: 1;            /* unit selector = narrower */
+}
+    button { margin-top: 14px; width: 100%; padding: 12px; font-size: 16px; border-radius: 12px; border: none; cursor: pointer; }
+    .result { margin-top: 14px; }
+    .big { font-size: 28px; font-weight: 800; margin: 10px 0 0; }
+    .small { font-size: 14px; color:#555; }
+    .error { color:#b00020; font-weight: 600; }
+    code { background:#f5f5f5; padding: 2px 6px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <h1>PES Energy Calculator</h1>
+  <p class="muted">Power × Time → Energy (Wh, kWh). Free, instant, no downloads.</p>
+
+    <div class="row">
+    <div class="value">
+        <label for="power">Power</label>
+        <input id="power" type="number" step="any" placeholder="e.g., 1000" />
+    </div>
+    <div class="unit">
+        <label for="powerUnit">Unit</label>
+        <select id="powerUnit">
+        <option value="W">W</option>
+        <option value="kW">kW</option>
+        </select>
+    </div>
+    </div>
+
+    <div class="row">
+    <div class="value">
+        <label for="time">Time</label>
+        <input id="time" type="number" step="any" placeholder="e.g., 3" />
+    </div>
+    <div class="unit">
+        <label for="timeUnit">Unit</label>
+        <select id="timeUnit">
+        <option value="h">hours</option>
+        <option value="min">minutes</option>
+        </select>
+    </div>
+    </div>
+
+    <button id="calcBtn">Calculate</button>
+
+    <div class="result" id="result"></div>
+    <p class="small">Formula: <code>E = P × t</code> (W × h = Wh)</p>
+  </div>
+
+  <script>
+    function toWatts(p, unit){
+      if(unit === "W") return p;
+      if(unit === "kW") return p * 1000;
+      throw new Error("Power unit must be W or kW.");
+    }
+
+    function toHours(t, unit){
+      if(unit === "h") return t;
+      if(unit === "min") return t / 60;
+      throw new Error("Time unit must be hours or minutes.");
+    }
+
+    function fmt(n, digits){
+      return Number.isFinite(n) ? n.toFixed(digits) : "—";
+    }
+
+    function calc(){
+      const powerVal = Number(document.getElementById("power").value);
+      const powerUnit = document.getElementById("powerUnit").value;
+      const timeVal = Number(document.getElementById("time").value);
+      const timeUnit = document.getElementById("timeUnit").value;
+      const out = document.getElementById("result");
+
+      if(!Number.isFinite(powerVal) || powerVal < 0) {
+        out.innerHTML = `<p class="error">Enter a valid power value.</p>`;
+        return;
+      }
+      if(!Number.isFinite(timeVal) || timeVal < 0) {
+        out.innerHTML = `<p class="error">Enter a valid time value.</p>`;
+        return;
+      }
+
+      const P = toWatts(powerVal, powerUnit);
+      const t = toHours(timeVal, timeUnit);
+      const Ewh = P * t;
+      const Ekwh = Ewh / 1000;
+
+      out.innerHTML = `
+        <div class="big">${fmt(Ekwh, 6)} kWh</div>
+        <div class="muted">${fmt(Ewh, 3)} Wh</div>
+        <p class="small">Converted: ${fmt(P, 3)} W × ${fmt(t, 4)} h</p>
+      `;
+    }
+
+    document.getElementById("calcBtn").addEventListener("click", calc);
+    // Allow Enter key to calculate
+    document.addEventListener("keydown", (e) => { if(e.key === "Enter") calc(); });
+  </script>
+</body>
+</html>
